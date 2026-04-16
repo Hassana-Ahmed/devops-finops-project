@@ -1,1 +1,30 @@
 
+name: FinOps Cost Guardrail
+on: [push, pull_request]
+
+jobs:
+  infracost:
+    name: Infracost Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Generate Cost Breakdown
+        run: |
+          infracost breakdown --path . \
+                            --format json \
+                            --out-file /tmp/infracost.json
+
+      - name: Show Cost Table in Terminal
+        run: |
+          infracost output --path /tmp/infracost.json --format table
